@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Prescription Refill Request</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f5f0;
+    --surface: #ffffff;
+    --text: #1a1a1a;
+    --text-muted: #6b6b6b;
+    --accent: #1b6b3a;
+    --accent-light: #e8f2ec;
+    --accent-hover: #145a2f;
+    --border: #d4d4cc;
+    --error: #c0392b;
+    --error-bg: #fdf0ef;
+    --success: #1b6b3a;
+    --success-bg: #e8f2ec;
+    --radius: 10px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  }
+
+  html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+
+  body {
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0;
+  }
+
+  /* ---- Header ---- */
+  .header {
+    width: 100%;
+    background: var(--accent);
+    color: white;
+    padding: 24px 20px 28px;
+    text-align: center;
+  }
+  .header h1 {
+    font-size: 1.35rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+  }
+  .header p {
+    font-size: 0.85rem;
+    opacity: 0.85;
+    font-weight: 400;
+  }
+
+  /* ---- Main card ---- */
+  .card {
+    width: 100%;
+    max-width: 440px;
+    background: var(--surface);
+    margin: -12px 16px 24px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    padding: 28px 24px 32px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ---- Form fields ---- */
+  .field { margin-bottom: 22px; }
+  .field:last-of-type { margin-bottom: 28px; }
+
+  label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+    letter-spacing: 0.01em;
+  }
+  label .optional {
+    font-weight: 400;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+  }
+
+  input, select {
+    width: 100%;
+    padding: 13px 14px;
+    font-size: 1rem;
+    font-family: inherit;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-light);
+  }
+  input::placeholder { color: #b0b0a8; }
+
+  /* Custom select arrow */
+  .select-wrap {
+    position: relative;
+  }
+  .select-wrap::after {
+    content: '';
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0; height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid var(--text-muted);
+    pointer-events: none;
+  }
+  select { padding-right: 38px; cursor: pointer; }
+
+  /* Rx number field - larger */
+  .rx-input {
+    font-size: 1.25rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-align: center;
+    padding: 16px 14px;
+  }
+
+  /* ---- Submit ---- */
+  .submit-btn {
+    width: 100%;
+    padding: 15px;
+    font-size: 1rem;
+    font-weight: 600;
+    font-family: inherit;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+    letter-spacing: 0.01em;
+  }
+  .submit-btn:hover { background: var(--accent-hover); }
+  .submit-btn:active { transform: scale(0.985); }
+  .submit-btn:disabled {
+    background: #a0b8a8;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* ---- Messages ---- */
+  .message {
+    margin-top: 20px;
+    padding: 16px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    display: none;
+  }
+  .message.error {
+    background: var(--error-bg);
+    color: var(--error);
+    border: 1px solid #e8c4c0;
+    display: block;
+  }
+  .message.success {
+    background: var(--success-bg);
+    color: var(--success);
+    border: 1px solid #b8d8c4;
+    display: block;
+  }
+  .message strong { font-weight: 600; }
+
+  /* ---- Footer ---- */
+  .footer {
+    text-align: center;
+    padding: 0 20px 32px;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    max-width: 440px;
+  }
+  .footer p { margin-bottom: 6px; }
+
+  /* ---- Loading spinner ---- */
+  .spinner {
+    display: inline-block;
+    width: 18px; height: 18px;
+    border: 2.5px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---- Success state ---- */
+  .success-view {
+    display: none;
+    text-align: center;
+    padding: 12px 0;
+  }
+  .success-view .checkmark {
+    width: 64px; height: 64px;
+    background: var(--success-bg);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+  }
+  .success-view .checkmark svg {
+    width: 32px; height: 32px;
+    stroke: var(--success);
+    stroke-width: 2.5;
+    fill: none;
+  }
+  .success-view h2 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .success-view p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 6px;
+  }
+  .success-view .store-phone {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .success-view .store-phone:hover { text-decoration: underline; }
+  .new-request-btn {
+    margin-top: 24px;
+    padding: 12px 28px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    font-family: inherit;
+    background: transparent;
+    color: var(--accent);
+    border: 1.5px solid var(--accent);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .new-request-btn:hover {
+    background: var(--accent);
+    color: white;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Prescription Refill Request</h1>
+  <p>Submit a refill and we'll have it ready for you</p>
+</div>
+
+<div class="card">
+  <!-- Form view -->
+  <form id="refillForm">
+    <div class="field">
+      <label for="storeSelect">Pharmacy Location</label>
+      <div class="select-wrap">
+        <select id="storeSelect" required>
+          <option value="" disabled selected>Select your pharmacy...</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="rxNumber">Prescription Number</label>
+      <input type="text" id="rxNumber" class="rx-input"
+             inputmode="numeric" pattern="[0-9]*"
+             placeholder="e.g. 6876386" required
+             minlength="5" maxlength="10"
+             autocomplete="off">
+    </div>
+
+    <div class="field">
+      <label for="patientName">First Name <span class="optional">(optional)</span></label>
+      <input type="text" id="patientName"
+             placeholder="Helps staff locate your order"
+             maxlength="50" autocomplete="given-name">
+    </div>
+
+    <button type="submit" class="submit-btn" id="submitBtn">
+      Submit Refill Request
+    </button>
+
+    <div class="message" id="errorMsg"></div>
+  </form>
+
+  <!-- Success view -->
+  <div class="success-view" id="successView">
+    <div class="checkmark">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    </div>
+    <h2>Request Submitted</h2>
+    <p id="successText"></p>
+    <p>Questions? Call your pharmacy:</p>
+    <a href="#" class="store-phone" id="storePhone"></a>
+    <br>
+    <button class="new-request-btn" onclick="resetForm()">Submit Another Refill</button>
+  </div>
+</div>
+
+<div class="footer">
+  <p>Your prescription number is located on your prescription label.</p>
+  <p>This form does not access any medical or personal health information.</p>
+</div>
+
+<script>
+  const form = document.getElementById('refillForm');
+  const storeSelect = document.getElementById('storeSelect');
+  const rxInput = document.getElementById('rxNumber');
+  const nameInput = document.getElementById('patientName');
+  const submitBtn = document.getElementById('submitBtn');
+  const errorMsg = document.getElementById('errorMsg');
+  const successView = document.getElementById('successView');
+  const successText = document.getElementById('successText');
+  const storePhone = document.getElementById('storePhone');
+
+  // Determine API base — works whether served from same origin or cross-origin
+  const API_BASE = window.location.origin;
+
+  // Load stores on page load
+  async function loadStores() {
+    try {
+      const resp = await fetch(`${API_BASE}/api/stores`);
+      const stores = await resp.json();
+
+      // Group by state for cleaner display
+      const grouped = {};
+      stores.forEach(s => {
+        if (!grouped[s.state]) grouped[s.state] = [];
+        grouped[s.state].push(s);
+      });
+
+      Object.keys(grouped).sort().forEach(state => {
+        const group = document.createElement('optgroup');
+        group.label = state === 'MO' ? 'Missouri' : state === 'KS' ? 'Kansas' : state;
+        grouped[state].forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.id;
+          opt.textContent = s.label;
+          group.appendChild(opt);
+        });
+        storeSelect.appendChild(group);
+      });
+    } catch (e) {
+      showError('Unable to load pharmacy locations. Please try again later.');
+    }
+  }
+
+  // Strip non-digits as user types
+  rxInput.addEventListener('input', () => {
+    rxInput.value = rxInput.value.replace(/\D/g, '');
+  });
+
+  // Form submission
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearError();
+
+    const rx = rxInput.value.trim();
+    const store = storeSelect.value;
+    const name = nameInput.value.trim();
+
+    // Client-side validation
+    if (!store) { showError('Please select your pharmacy location.'); return; }
+    if (!rx || rx.length < 5) { showError('Please enter a valid prescription number (at least 5 digits).'); return; }
+
+    // Submit
+    setLoading(true);
+    try {
+      const resp = await fetch(`${API_BASE}/api/refill`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rx_number: rx,
+          store_id: store,
+          patient_name: name,
+        }),
+      });
+
+      const data = await resp.json();
+
+      if (!resp.ok) {
+        const detail = data.detail;
+        if (Array.isArray(detail)) {
+          showError(detail.map(d => d.msg).join('. '));
+        } else if (typeof detail === 'string') {
+          showError(detail);
+        } else {
+          showError('Something went wrong. Please try again.');
+        }
+        return;
+      }
+
+      // Show success
+      successText.textContent = data.message;
+      if (data.store_phone) {
+        storePhone.textContent = data.store_phone;
+        storePhone.href = `tel:${data.store_phone.replace(/\D/g, '')}`;
+        storePhone.style.display = '';
+      } else {
+        storePhone.style.display = 'none';
+      }
+      form.style.display = 'none';
+      successView.style.display = 'block';
+
+    } catch (e) {
+      showError('Unable to submit your request. Please check your connection and try again.');
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  function showError(msg) {
+    errorMsg.textContent = msg;
+    errorMsg.className = 'message error';
+  }
+  function clearError() {
+    errorMsg.textContent = '';
+    errorMsg.className = 'message';
+  }
+  function setLoading(loading) {
+    submitBtn.disabled = loading;
+    submitBtn.innerHTML = loading
+      ? '<span class="spinner"></span>Submitting...'
+      : 'Submit Refill Request';
+  }
+  function resetForm() {
+    form.reset();
+    form.style.display = '';
+    successView.style.display = 'none';
+    clearError();
+  }
+
+  loadStores();
+</script>
+</body>
+</html>
