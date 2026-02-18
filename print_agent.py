@@ -29,18 +29,30 @@ import requests
 # ZPL label generation
 # ---------------------------------------------------------------------------
 
-def generate_zpl_label(rx_number: str, store_id: str, request_id: str,
+def generate_zpl_label(rx_number: str, store_id: str,
                        patient_name: str = "", created_at: str = "") -> str:
     """
     Generate a ZPL label for a refill request.
 
-    Targets approximately 2" x 3" printable area on the Zebra GK420d.
-    ZPL units: 203 dpi, so 1 inch = 203 dots.
-      2" wide  = ~406 dots
-      3" tall  = ~609 dots
+    Label stock: Cosentino's Pharmacy labels — 2" tall x 3.25" wide.
+    The printer feeds the 2" edge first, so:
+      ^PW = 406 dots  (2.00" — the print-head width)
+      ^LL = 659 dots  (3.25" — the feed/label length)
 
-    Adjust ^PW (print width) and ^LL (label length) to match your actual
-    label stock. These values are a reasonable starting point.
+    Pre-printed elements (do not overprint):
+      - Top-left: Cosentino's PHARMACY logo
+      - Bottom: FDA side-effects notice
+
+    Because the physical label is landscape but the printer feeds
+    portrait, we use ^FWR (Field Default: Rotate 90° clockwise)
+    to rotate all content.  In rotated mode the coordinate system is:
+      ^FO x,y  where:
+        x = distance from LEFT edge of label  (0–406, the 2" axis)
+        y = distance from TOP edge of label   (0–659, the 3.25" axis)
+    Text/barcodes render rotated so they read correctly when the
+    label is viewed in landscape orientation.
+
+    ZPL units: 203 dpi  =>  1 inch = 203 dots.
     """
     # Parse and format the timestamp
     try:
@@ -51,28 +63,53 @@ def generate_zpl_label(rx_number: str, store_id: str, request_id: str,
 
     patient_line = f"Name: {patient_name}" if patient_name else ""
 
+    # Layout reference — visual positions on the label as seen landscape.
+    # The printer feeds the 2" edge (print-head width = 406 dots).
+    # The 3.25" dimension is the label length (659 dots, feed direction).
+    #
+    # With ^FWR all fields are rotated 90° CW.  The X coordinate in
+    # ^FO controls the vertical position on the physical label, but it
+    # counts from the BOTTOM of the label upward.  To get an intuitive
+    # top-down layout we compute:
+    #       zpl_x = 406 - visual_y - element_height
+    #
+    # Visual layout (top of label = logo):
+    #   visual_y  0– 95 : pre-printed logo — avoid
+    #   visual_y 100     : "*** REFILL REQUEST ***"  (34 tall)
+    #   visual_y 140     : Rx# (50 tall)
+    #   visual_y 196     : Patient name (24 tall)
+    #   visual_y 226     : Store + Submitted (20 tall)
+    #   visual_y 254     : separator line (2 tall)
+    #   visual_y 262     : "Please pull and process." (22 tall)
+    #   visual_y 292     : barcode (50 tall)
+    #   visual_y 380–406 : pre-printed FDA notice — avoid
+
+    def _vy(visual_y, height):
+        """Convert visual Y (top-down) to ZPL ^FO X (bottom-up)."""
+        return 406 - visual_y - height
+
     zpl = f"""
 ^XA
-^PW464
-^LL609
+^PW406
+^LL659
 ^CF0,20
+^FWR
 
 ~SD25
 
-^FO20,20^A0N,40,40^FD*** REFILL REQUEST ***^FS
+^FO{_vy(100, 34)},20^A0R,34,34^FD*** REFILL REQUEST ***^FS
 
-^FO20,80^A0N,55,55^FDRx# {rx_number}^FS
+^FO{_vy(140, 50)},20^A0R,50,50^FDRx# {rx_number}^FS
 
-^FO20,160^A0N,28,28^FDStore: {store_id}^FS
-^FO20,200^A0N,28,28^FD{patient_line}^FS
+^FO{_vy(196, 24)},20^A0R,24,24^FD{patient_line}^FS
 
-^FO20,260^A0N,22,22^FDSubmitted: {time_str}^FS
-^FO20,295^A0N,22,22^FDRef: {request_id}^FS
+^FO{_vy(226, 20)},20^A0R,20,20^FDStore: {store_id}^FS
+^FO{_vy(226, 20)},300^A0R,20,20^FDSubmitted: {time_str}^FS
 
-^FO20,345^GB420,0,2^FS
-^FO20,365^A0N,24,24^FDPlease pull and process.^FS
+^FO{_vy(254, 2)},20^GB2,620,2^FS
+^FO{_vy(262, 22)},20^A0R,22,22^FDPlease pull and process.^FS
 
-^FO20,420^BY2,2,60^BCN,60,Y,N,N^FD{rx_number}^FS
+^FO{_vy(292, 50)},20^BY2,2,50^BCR,50,Y,N,N^FD{rx_number}^FS
 
 ^XZ
 """.strip()
@@ -137,7 +174,6 @@ def poll_and_print(server_url: str, store_id: str, printer_ip: str,
                 zpl = generate_zpl_label(
                     rx_number=rx,
                     store_id=store_id,
-                    request_id=rid,
                     patient_name=name,
                     created_at=created,
                 )
