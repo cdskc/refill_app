@@ -87,8 +87,10 @@ class RefillRequest(BaseModel):
         v = v.strip()
         if not v.isdigit():
             raise ValueError("Prescription number must contain only digits")
-        if len(v) < 5 or len(v) > 10:
-            raise ValueError("Prescription number should be 5-10 digits")
+        if len(v) != 7:
+            raise ValueError("Prescription number must be exactly 7 digits")
+        if v[0] not in "2468":
+            raise ValueError("Prescription number must start with 2, 4, 6, or 8")
         return v
 
     @field_validator("store_id")

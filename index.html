@@ -3,28 +3,30 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Prescription Refill Request</title>
+<title>Prescription Refill Request | Cosentino's Food Stores</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap');
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg: #f5f5f0;
+    --bg: #f4f4f4;
     --surface: #ffffff;
     --text: #1a1a1a;
     --text-muted: #6b6b6b;
-    --accent: #1b6b3a;
-    --accent-light: #e8f2ec;
-    --accent-hover: #145a2f;
-    --border: #d4d4cc;
-    --error: #c0392b;
+    --brand-dark: #32373c;
+    --brand-darker: #23272b;
+    --accent: #32373c;
+    --accent-hover: #23272b;
+    --accent-light: #eaedef;
+    --border: #d5d5d5;
+    --error: #cf2e2e;
     --error-bg: #fdf0ef;
-    --success: #1b6b3a;
-    --success-bg: #e8f2ec;
-    --radius: 10px;
+    --success: #2e7d32;
+    --success-bg: #eaf5eb;
+    --radius: 8px;
     --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.1);
   }
 
   html { font-size: 16px; -webkit-text-size-adjust: 100%; }
@@ -43,20 +45,57 @@
   /* ---- Header ---- */
   .header {
     width: 100%;
-    background: var(--accent);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .header-inner {
+    width: 100%;
+    max-width: 440px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .header img {
+    height: 36px;
+    width: auto;
+  }
+  .header-text {
+    border-left: 1px solid var(--border);
+    padding-left: 14px;
+  }
+  .header-text h1 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .header-text p {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+
+  /* ---- Page title banner ---- */
+  .banner {
+    width: 100%;
+    background: var(--brand-dark);
     color: white;
-    padding: 24px 20px 28px;
+    padding: 20px 20px 24px;
     text-align: center;
   }
-  .header h1 {
-    font-size: 1.35rem;
+  .banner h2 {
+    font-size: 1.2rem;
     font-weight: 600;
     letter-spacing: -0.01em;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
   }
-  .header p {
-    font-size: 0.85rem;
-    opacity: 0.85;
+  .banner p {
+    font-size: 0.82rem;
+    opacity: 0.8;
     font-weight: 400;
   }
 
@@ -65,7 +104,7 @@
     width: 100%;
     max-width: 440px;
     background: var(--surface);
-    margin: -12px 16px 24px;
+    margin: -10px 16px 24px;
     border-radius: var(--radius);
     box-shadow: var(--shadow-md);
     padding: 28px 24px 32px;
@@ -97,7 +136,7 @@
     font-size: 1rem;
     font-family: inherit;
     border: 1.5px solid var(--border);
-    border-radius: 8px;
+    border-radius: 6px;
     background: var(--surface);
     color: var(--text);
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -110,6 +149,13 @@
     box-shadow: 0 0 0 3px var(--accent-light);
   }
   input::placeholder { color: #b0b0a8; }
+
+  /* Rx number helper text */
+  .field-hint {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 5px;
+  }
 
   /* Custom select arrow */
   .select-wrap {
@@ -133,7 +179,7 @@
   .rx-input {
     font-size: 1.25rem;
     font-weight: 500;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
     text-align: center;
     padding: 16px 14px;
   }
@@ -148,7 +194,7 @@
     background: var(--accent);
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
     cursor: pointer;
     transition: background 0.15s ease, transform 0.1s ease;
     letter-spacing: 0.01em;
@@ -156,7 +202,7 @@
   .submit-btn:hover { background: var(--accent-hover); }
   .submit-btn:active { transform: scale(0.985); }
   .submit-btn:disabled {
-    background: #a0b8a8;
+    background: #9ca3a9;
     cursor: not-allowed;
     transform: none;
   }
@@ -165,7 +211,7 @@
   .message {
     margin-top: 20px;
     padding: 16px;
-    border-radius: 8px;
+    border-radius: 6px;
     font-size: 0.9rem;
     line-height: 1.5;
     display: none;
@@ -188,12 +234,23 @@
   .footer {
     text-align: center;
     padding: 0 20px 32px;
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     color: var(--text-muted);
-    line-height: 1.6;
+    line-height: 1.7;
     max-width: 440px;
   }
-  .footer p { margin-bottom: 6px; }
+  .footer p { margin-bottom: 4px; }
+  .footer a {
+    color: var(--text-muted);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .footer a:hover { color: var(--text); }
+  .footer .copyright {
+    margin-top: 16px;
+    font-size: 0.7rem;
+    opacity: 0.7;
+  }
 
   /* ---- Loading spinner ---- */
   .spinner {
@@ -256,7 +313,7 @@
     background: transparent;
     color: var(--accent);
     border: 1.5px solid var(--accent);
-    border-radius: 8px;
+    border-radius: 6px;
     cursor: pointer;
     transition: background 0.15s ease, color 0.15s ease;
   }
@@ -269,8 +326,19 @@
 <body>
 
 <div class="header">
-  <h1>Prescription Refill Request</h1>
-  <p>Submit a refill and we'll have it ready for you</p>
+  <div class="header-inner">
+    <img src="https://cosentinos.com/wp-content/uploads/Cosentinos-Food-Stores.svg"
+         alt="Cosentino's Food Stores">
+    <div class="header-text">
+      <h1>Pharmacy</h1>
+      <p>Prescription Refill</p>
+    </div>
+  </div>
+</div>
+
+<div class="banner">
+  <h2>Request a Prescription Refill</h2>
+  <p>Submit your Rx number and we'll have it ready for pickup</p>
 </div>
 
 <div class="card">
@@ -286,12 +354,13 @@
     </div>
 
     <div class="field">
-      <label for="rxNumber">Prescription Number</label>
+      <label for="rxNumber">Prescription Number (Rx#)</label>
       <input type="text" id="rxNumber" class="rx-input"
-             inputmode="numeric" pattern="[0-9]*"
+             inputmode="numeric" pattern="[2468]\d{6}"
              placeholder="e.g. 6876386" required
-             minlength="5" maxlength="10"
+             minlength="7" maxlength="7"
              autocomplete="off">
+      <div class="field-hint">7-digit number found on your prescription label</div>
     </div>
 
     <div class="field">
@@ -323,8 +392,10 @@
 </div>
 
 <div class="footer">
-  <p>Your prescription number is located on your prescription label.</p>
-  <p>This form does not access any medical or personal health information.</p>
+  <p>Your prescription number is on your prescription label.</p>
+  <p>This form does not access medical or personal health information.</p>
+  <p>Questions? <a href="mailto:comments@cosentinos.com">comments@cosentinos.com</a></p>
+  <p class="copyright">&copy; 2026 Cosentino's Food Stores. All rights reserved.</p>
 </div>
 
 <script>
@@ -338,7 +409,7 @@
   const successText = document.getElementById('successText');
   const storePhone = document.getElementById('storePhone');
 
-  // Determine API base — works whether served from same origin or cross-origin
+  // Determine API base
   const API_BASE = window.location.origin;
 
   // Load stores on page load
@@ -370,9 +441,9 @@
     }
   }
 
-  // Strip non-digits as user types
+  // Strip non-digits as user types, enforce 7-char max
   rxInput.addEventListener('input', () => {
-    rxInput.value = rxInput.value.replace(/\D/g, '');
+    rxInput.value = rxInput.value.replace(/\D/g, '').slice(0, 7);
   });
 
   // Form submission
@@ -384,9 +455,16 @@
     const store = storeSelect.value;
     const name = nameInput.value.trim();
 
-    // Client-side validation
+    // Client-side validation (mirrors server rules)
     if (!store) { showError('Please select your pharmacy location.'); return; }
-    if (!rx || rx.length < 5) { showError('Please enter a valid prescription number (at least 5 digits).'); return; }
+    if (!rx || rx.length !== 7) {
+      showError('Prescription number must be exactly 7 digits.');
+      return;
+    }
+    if (!'2468'.includes(rx[0])) {
+      showError('Prescription number must start with 2, 4, 6, or 8.');
+      return;
+    }
 
     // Submit
     setLoading(true);
@@ -428,7 +506,7 @@
       successView.style.display = 'block';
 
     } catch (e) {
-      showError('Unable to submit your request. Please check your connection and try again.');
+      showError('Unable to submit. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }

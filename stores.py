@@ -105,7 +105,7 @@ STORES = {
         "phone": "(816) 246-7300",
         "fax": "(816) 875-1015",
         "hours": {"mon_fri": "9AM-8PM", "sat": "9AM-5PM", "sun": "10AM-4PM"},
-        "printer_ip": "",
+        "printer_ip": "10.157.4.49",
         "printer_port": 9100,
     },
     "171": {
