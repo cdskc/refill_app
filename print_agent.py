@@ -74,14 +74,14 @@ def generate_zpl_label(rx_number: str, store_id: str,
     #       zpl_x = 406 - visual_y - element_height
     #
     # Visual layout (top of label = logo):
-    #   visual_y  0– 75 : pre-printed logo — avoid
-    #   visual_y  80     : "*** REFILL REQUEST ***"  (34 tall)
-    #   visual_y 120     : Rx# (50 tall)
-    #   visual_y 176     : Patient name (24 tall)
-    #   visual_y 206     : Store + Submitted (20 tall)
-    #   visual_y 234     : separator line (2 tall)
-    #   visual_y 242     : "Please pull and process." (22 tall)
-    #   visual_y 272     : barcode (50 tall)
+    #   visual_y  0– 65 : pre-printed logo — avoid
+    #   visual_y  70     : "*** REFILL REQUEST ***"  (34 tall)
+    #   visual_y 110     : Rx# (50 tall)
+    #   visual_y 166     : Patient name (24 tall)
+    #   visual_y 196     : Store + Submitted (20 tall)
+    #   visual_y 224     : separator line (2 tall)
+    #   visual_y 232     : "Please pull and process." (22 tall)
+    #   visual_y 262     : barcode (50 tall)
     #   visual_y 380–406 : pre-printed FDA notice — avoid
 
     def _vy(visual_y, height):
@@ -97,19 +97,19 @@ def generate_zpl_label(rx_number: str, store_id: str,
 
 ~SD25
 
-^FO{_vy(80, 34)},20^A0R,34,34^FD*** REFILL REQUEST ***^FS
+^FO{_vy(70, 34)},20^A0R,34,34^FD*** REFILL REQUEST ***^FS
 
-^FO{_vy(120, 50)},20^A0R,50,50^FDRx# {rx_number}^FS
+^FO{_vy(110, 50)},20^A0R,50,50^FDRx# {rx_number}^FS
 
-^FO{_vy(176, 24)},20^A0R,24,24^FD{patient_line}^FS
+^FO{_vy(166, 24)},20^A0R,24,24^FD{patient_line}^FS
 
-^FO{_vy(206, 20)},20^A0R,20,20^FDStore: {store_id}^FS
-^FO{_vy(206, 20)},300^A0R,20,20^FDSubmitted: {time_str}^FS
+^FO{_vy(196, 20)},20^A0R,20,20^FDStore: {store_id}^FS
+^FO{_vy(196, 20)},300^A0R,20,20^FDSubmitted: {time_str}^FS
 
-^FO{_vy(234, 2)},20^GB2,620,2^FS
-^FO{_vy(242, 22)},20^A0R,22,22^FDPlease pull and process.^FS
+^FO{_vy(224, 2)},20^GB2,620,2^FS
+^FO{_vy(232, 22)},20^A0R,22,22^FDPlease pull and process.^FS
 
-^FO{_vy(272, 50)},20^BY2,2,50^BCR,50,Y,N,N^FD{rx_number}^FS
+^FO{_vy(262, 50)},20^BY2,2,50^BCR,50,Y,N,N^FD{rx_number}^FS
 
 ^XZ
 """.strip()
