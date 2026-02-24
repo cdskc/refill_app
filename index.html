@@ -654,6 +654,7 @@
   // ---- State ----
   let html5Qrcode = null;
   let storesData = [];
+  let scanFallbackTimer = null;
 
   const API_BASE = window.location.origin;
 
@@ -744,19 +745,30 @@
   }
 
   // ---- Scanner lifecycle ----
-  async function startScanner() {
+  async function startScanner(useQrBox = true) {
     showView('scanner');
     clearScanError();
+    clearFallbackTimer();
 
     if (!html5Qrcode) {
       html5Qrcode = new Html5Qrcode('scannerRegion');
     }
 
+    // Stop any existing scan before reconfiguring
+    if (html5Qrcode.isScanning) {
+      try { await html5Qrcode.stop(); } catch (e) { /* ignore */ }
+    }
+
     const config = {
-      fps: 10,
-      qrbox: { width: 280, height: 120 },
+      fps: 15,
       formatsToSupport: [Html5QrcodeSupportedFormats.CODE_128],
+      experimentalFeatures: { useBarCodeDetectorIfSupported: true },
     };
+
+    // Start with a guide box; after 5s fall back to full-frame
+    if (useQrBox) {
+      config.qrbox = { width: 350, height: 150 };
+    }
 
     try {
       await html5Qrcode.start(
@@ -765,12 +777,27 @@
         onScanSuccess,
         () => {} // onScanFailure: fires every frame with no barcode, intentionally ignored
       );
+
+      // If using the guide box, set a timer to switch to full-frame after 5s
+      if (useQrBox) {
+        scanFallbackTimer = setTimeout(() => {
+          startScanner(false);  // restart without the box
+        }, 5000);
+      }
     } catch (err) {
       handleCameraError(err);
     }
   }
 
+  function clearFallbackTimer() {
+    if (scanFallbackTimer) {
+      clearTimeout(scanFallbackTimer);
+      scanFallbackTimer = null;
+    }
+  }
+
   async function stopScanner() {
+    clearFallbackTimer();
     if (html5Qrcode && html5Qrcode.isScanning) {
       try { await html5Qrcode.stop(); } catch (e) { /* ignore */ }
     }
