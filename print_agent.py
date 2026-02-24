@@ -5,13 +5,17 @@ Polls the API server for pending refill requests for this store,
 then prints a label to the local Zebra GK420d via raw TCP socket.
 
 Usage:
-    python print_agent.py --store 157 --printer 192.168.1.50 --server http://your-server:8000
+    python print_agent.py --store 157 --server https://refills.cdskc.me
+
+    The printer IP is fetched automatically from the server based on the store ID.
+    Override it locally (e.g. for testing) with --printer:
+    python print_agent.py --store 157 --server https://refills.cdskc.me --printer 192.168.1.50
 
 Configuration can also be set via environment variables:
     STORE_ID=157
-    PRINTER_IP=192.168.1.50
+    SERVER_URL=https://refills.cdskc.me
+    PRINTER_IP=192.168.1.50   # optional override
     PRINTER_PORT=9100
-    SERVER_URL=http://your-server:8000
     POLL_INTERVAL=5
 """
 
@@ -142,6 +146,25 @@ def print_to_console(zpl: str):
 
 
 # ---------------------------------------------------------------------------
+# Server config fetch
+# ---------------------------------------------------------------------------
+
+def fetch_printer_config(server_url: str, store_id: str) -> tuple[str, int]:
+    """Fetch printer IP and port from the server's store config endpoint."""
+    try:
+        resp = requests.get(
+            f"{server_url.rstrip('/')}/api/store-config/{store_id}",
+            timeout=10,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        return data.get("printer_ip", ""), data.get("printer_port", 9100)
+    except Exception as e:
+        print(f"  [WARN] Could not fetch printer config from server: {e}")
+        return "", 9100
+
+
+# ---------------------------------------------------------------------------
 # Polling loop
 # ---------------------------------------------------------------------------
 
@@ -234,16 +257,24 @@ def main():
         print("Error: --store is required (or set STORE_ID env var)")
         sys.exit(1)
 
-    if not args.printer:
-        print("WARNING: No --printer specified. Running in console mode.")
-        print("         ZPL will be printed to stdout instead of a Zebra printer.")
+    printer_ip = args.printer
+    printer_port = args.printer_port
+
+    if not printer_ip:
+        print("No --printer specified — fetching printer config from server...")
+        printer_ip, printer_port = fetch_printer_config(args.server, args.store)
+        if printer_ip:
+            print(f"  Using printer {printer_ip}:{printer_port} (from server config)")
+        else:
+            print("WARNING: No printer IP configured for this store. Running in console mode.")
+            print("         ZPL will be printed to stdout instead of a Zebra printer.")
         print()
 
     poll_and_print(
         server_url=args.server,
         store_id=args.store,
-        printer_ip=args.printer,
-        printer_port=args.printer_port,
+        printer_ip=printer_ip,
+        printer_port=printer_port,
         poll_interval=args.interval,
     )
 

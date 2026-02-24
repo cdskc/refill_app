@@ -16,6 +16,7 @@ STORES = {
         "hours": {"mon_fri": "9AM-8PM", "sat": "9AM-5PM", "sun": "10AM-4PM"},
         "printer_ip": "",  # Set to Zebra GK420d IP, e.g. "192.168.1.100"
         "printer_port": 9100,
+        "printer_mac": "",
     },
     "104": {
         "name": "Price Chopper Pharmacy",
@@ -29,6 +30,7 @@ STORES = {
         "hours": {"mon_fri": "9AM-8PM", "sat": "9AM-5PM", "sun": "10AM-4PM"},
         "printer_ip": "",
         "printer_port": 9100,
+        "printer_mac": "",
     },
     "110": {
         "name": "Price Chopper Pharmacy",
@@ -42,6 +44,7 @@ STORES = {
         "hours": {"mon_fri": "9AM-7PM", "sat": "9AM-5PM", "sun": "closed"},
         "printer_ip": "",
         "printer_port": 9100,
+        "printer_mac": "",
     },
     "117": {
         "name": "Price Chopper Pharmacy",
@@ -55,6 +58,7 @@ STORES = {
         "hours": {"mon_fri": "9AM-8PM", "sat": "9AM-5PM", "sun": "10AM-4PM"},
         "printer_ip": "",
         "printer_port": 9100,
+        "printer_mac": "",
     },
     "119": {
         "name": "Price Chopper Pharmacy",
@@ -68,6 +72,7 @@ STORES = {
         "hours": {"mon_fri": "9AM-7PM", "sat": "9AM-5PM", "sun": "closed"},
         "printer_ip": "",
         "printer_port": 9100,
+        "printer_mac": "",
     },
     "121": {
         "name": "Price Chopper Pharmacy",
@@ -81,6 +86,7 @@ STORES = {
         "hours": {"mon_fri": "9AM-8PM", "sat": "9AM-5PM", "sun": "10AM-4PM"},
         "printer_ip": "",
         "printer_port": 9100,
+        "printer_mac": "",
     },
     "156": {
         "name": "Sun Fresh Pharmacy",
@@ -94,6 +100,7 @@ STORES = {
         "hours": {"mon_fri": "9AM-7PM", "sat": "9AM-5PM", "sun": "closed"},
         "printer_ip": "",
         "printer_port": 9100,
+        "printer_mac": "",
     },
     "157": {
         "name": "Price Chopper Pharmacy",
@@ -107,6 +114,7 @@ STORES = {
         "hours": {"mon_fri": "9AM-8PM", "sat": "9AM-5PM", "sun": "10AM-4PM"},
         "printer_ip": "10.157.4.48",
         "printer_port": 9100,
+        "printer_mac": "",
     },
     "171": {
         "name": "Price Chopper Pharmacy",
@@ -120,6 +128,7 @@ STORES = {
         "hours": {"mon_fri": "9AM-8PM", "sat": "9AM-5PM", "sun": "10AM-4PM"},
         "printer_ip": "",
         "printer_port": 9100,
+        "printer_mac": "",
     },
     "249": {
         "name": "Price Chopper Pharmacy",
@@ -133,6 +142,7 @@ STORES = {
         "hours": {"mon_fri": "9AM-8PM", "sat": "9AM-5PM", "sun": "10AM-4PM"},
         "printer_ip": "",
         "printer_port": 9100,
+        "printer_mac": "",
     },
     "250": {
         "name": "Price Chopper Pharmacy",
@@ -146,6 +156,7 @@ STORES = {
         "hours": {"mon_fri": "9AM-7PM", "sat": "9AM-5PM", "sun": "closed"},
         "printer_ip": "",
         "printer_port": 9100,
+        "printer_mac": "",
     },
     "285": {
         "name": "Price Chopper Pharmacy",
@@ -159,6 +170,7 @@ STORES = {
         "hours": {"mon_fri": "9AM-7PM", "sat": "9AM-5PM", "sun": "closed"},
         "printer_ip": "",
         "printer_port": 9100,
+        "printer_mac": "",
     },
     "288": {
         "name": "Price Chopper Pharmacy",
@@ -172,6 +184,7 @@ STORES = {
         "hours": {"mon_fri": "9AM-8PM", "sat": "9AM-5PM", "sun": "10AM-4PM"},
         "printer_ip": "",
         "printer_port": 9100,
+        "printer_mac": "",
     },
     "319": {
         "name": "Price Chopper Pharmacy",
@@ -185,6 +198,7 @@ STORES = {
         "hours": {"mon_fri": "9AM-8PM", "sat": "9AM-5PM", "sun": "10AM-4PM"},
         "printer_ip": "",
         "printer_port": 9100,
+        "printer_mac": "",
     },
     "325": {
         "name": "Price Chopper Pharmacy",
@@ -198,6 +212,7 @@ STORES = {
         "hours": {"mon_fri": "9AM-8PM", "sat": "9AM-5PM", "sun": "10AM-4PM"},
         "printer_ip": "",
         "printer_port": 9100,
+        "printer_mac": "",
     },
     "359": {
         "name": "Price Chopper Pharmacy",
@@ -211,6 +226,7 @@ STORES = {
         "hours": {"mon_fri": "9AM-8PM", "sat": "9AM-5PM", "sun": "9AM-3PM"},
         "printer_ip": "",
         "printer_port": 9100,
+        "printer_mac": "",
     },
     "405": {
         "name": "Price Chopper Pharmacy",
@@ -224,6 +240,7 @@ STORES = {
         "hours": {"mon_fri": "9AM-8PM", "sat": "9AM-5PM", "sun": "10AM-4PM"},
         "printer_ip": "",
         "printer_port": 9100,
+        "printer_mac": "",
     },
     "415": {
         "name": "Price Chopper Pharmacy",
@@ -237,6 +254,7 @@ STORES = {
         "hours": {"mon_fri": "9AM-8PM", "sat": "9AM-5PM", "sun": "10AM-4PM"},
         "printer_ip": "",
         "printer_port": 9100,
+        "printer_mac": "",
     },
     "416": {
         "name": "Price Chopper Pharmacy",
@@ -250,6 +268,7 @@ STORES = {
         "hours": {"mon_fri": "9AM-8PM", "sat": "9AM-5PM", "sun": "10AM-4PM"},
         "printer_ip": "",
         "printer_port": 9100,
+        "printer_mac": "",
     },
     "425": {
         "name": "Cosentino's Market Pharmacy",
@@ -263,6 +282,7 @@ STORES = {
         "hours": {"mon_fri": "9AM-7PM", "sat": "9AM-5PM", "sun": "closed"},
         "printer_ip": "",
         "printer_port": 9100,
+        "printer_mac": "",
     },
     "448": {
         "name": "Sun Fresh Pharmacy",
@@ -276,6 +296,7 @@ STORES = {
         "hours": {"mon_fri": "", "sat": "", "sun": ""},
         "printer_ip": "",
         "printer_port": 9100,
+        "printer_mac": "",
     },
 }
 

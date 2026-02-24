@@ -118,6 +118,19 @@ async def list_stores():
     return get_store_list_for_form()
 
 
+@app.get("/api/store-config/{store_id}")
+async def get_store_config(store_id: str):
+    """Return printer config for a store (used by print agents on startup)."""
+    if store_id not in STORES:
+        raise HTTPException(status_code=404, detail="Store not found")
+    store = STORES[store_id]
+    return {
+        "store_id": store_id,
+        "printer_ip": store.get("printer_ip", ""),
+        "printer_port": store.get("printer_port", 9100),
+    }
+
+
 @app.post("/api/refill")
 async def submit_refill(req: RefillRequest):
     """Submit a new refill request."""
