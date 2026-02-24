@@ -321,6 +321,152 @@
     background: var(--accent);
     color: white;
   }
+
+  /* ---- Choice view (Layout A) ---- */
+  .choice-view {
+    text-align: center;
+    padding: 8px 0;
+  }
+  .choice-subtitle {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+  }
+  .choice-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 18px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    font-family: inherit;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+    letter-spacing: 0.01em;
+    border: none;
+  }
+  .choice-btn:active { transform: scale(0.985); }
+  .choice-btn + .choice-btn { margin-top: 12px; }
+  .choice-btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+  .choice-btn-primary:hover { background: var(--accent-hover); }
+  .choice-btn-secondary {
+    background: transparent;
+    color: var(--accent);
+    border: 1.5px solid var(--accent);
+  }
+  .choice-btn-secondary:hover {
+    background: var(--accent);
+    color: white;
+  }
+  .choice-icon {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+
+  /* ---- Scan header button (Layout B - inside existing form) ---- */
+  .scan-header-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-family: inherit;
+    background: var(--success-bg);
+    color: var(--success);
+    border: 1.5px solid #b8d8c4;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+    margin-bottom: 24px;
+  }
+  .scan-header-btn:active { transform: scale(0.985); }
+  .scan-header-btn:hover { background: #d9eedc; }
+  .scan-header-btn svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  /* ---- Scanner view ---- */
+  .scanner-view {
+    display: none;
+    text-align: center;
+  }
+  .scanner-instruction {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    line-height: 1.4;
+  }
+  .scanner-region {
+    width: 100%;
+    min-height: 280px;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    background: #000;
+  }
+
+  /* ---- Scanned form ---- */
+  .scanned-form { display: none; }
+  .scan-result-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--success-bg);
+    color: var(--success);
+    border: 1px solid #b8d8c4;
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 24px;
+  }
+  .scan-check-icon {
+    width: 18px;
+    height: 18px;
+    stroke: var(--success);
+    stroke-width: 2.5;
+    fill: none;
+  }
+  .readonly-field {
+    background: var(--accent-light) !important;
+    color: var(--text);
+    cursor: default;
+    border-color: var(--accent-light) !important;
+  }
+  .readonly-field:focus {
+    box-shadow: none !important;
+    border-color: var(--accent-light) !important;
+  }
+  .back-link {
+    display: block;
+    width: 100%;
+    margin-top: 16px;
+    padding: 10px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    font-family: inherit;
+    background: transparent;
+    color: var(--text-muted);
+    border: none;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    text-align: center;
+  }
+  .back-link:hover { color: var(--text); }
 </style>
 </head>
 <body>
@@ -342,8 +488,79 @@
 </div>
 
 <div class="card">
-  <!-- Form view -->
-  <form id="refillForm">
+  <!-- Choice view (Layout A start) -->
+  <div id="choiceView" class="choice-view" style="display:none;">
+    <p class="choice-subtitle">How would you like to submit your refill?</p>
+    <button type="button" class="choice-btn choice-btn-primary" id="choiceScanBtn">
+      <svg class="choice-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 7V5a2 2 0 012-2h2"/>
+        <path d="M17 3h2a2 2 0 012 2v2"/>
+        <path d="M21 17v2a2 2 0 01-2 2h-2"/>
+        <path d="M7 21H5a2 2 0 01-2-2v-2"/>
+        <line x1="7" y1="12" x2="17" y2="12"/>
+      </svg>
+      Scan Barcode
+    </button>
+    <button type="button" class="choice-btn choice-btn-secondary" id="choiceManualBtn">
+      Enter Manually
+    </button>
+  </div>
+
+  <!-- Scanner view -->
+  <div id="scannerView" class="scanner-view">
+    <p class="scanner-instruction">Point your camera at the barcode on your prescription label</p>
+    <div id="scannerRegion" class="scanner-region"></div>
+    <div class="message" id="scanError"></div>
+    <button type="button" class="choice-btn choice-btn-secondary" id="cancelScanBtn">Cancel</button>
+  </div>
+
+  <!-- Scanned form (post-scan confirmation) -->
+  <form id="scannedForm" class="scanned-form">
+    <div class="scan-result-badge">
+      <svg viewBox="0 0 24 24" class="scan-check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      Barcode Scanned
+    </div>
+
+    <div class="field">
+      <label>Pharmacy Location</label>
+      <input type="text" id="scannedStore" class="readonly-field" readonly tabindex="-1">
+      <input type="hidden" id="scannedStoreId">
+    </div>
+
+    <div class="field">
+      <label>Prescription Number (Rx#)</label>
+      <input type="text" id="scannedRx" class="rx-input readonly-field" readonly tabindex="-1">
+    </div>
+
+    <div class="field">
+      <label for="scannedName">First Name <span class="optional">(optional)</span></label>
+      <input type="text" id="scannedName"
+             placeholder="Helps staff locate your order"
+             maxlength="50" autocomplete="given-name">
+    </div>
+
+    <button type="submit" class="submit-btn" id="scannedSubmitBtn">
+      Submit Refill Request
+    </button>
+
+    <div class="message" id="scannedErrorMsg"></div>
+    <button type="button" class="back-link" id="rescanBtn">Scan a different barcode</button>
+  </form>
+
+  <!-- Manual form view -->
+  <form id="refillForm" style="display:none;">
+    <!-- Scan button for Layout B (hidden in Layout A) -->
+    <button type="button" class="scan-header-btn" id="formScanBtn" style="display:none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 7V5a2 2 0 012-2h2"/>
+        <path d="M17 3h2a2 2 0 012 2v2"/>
+        <path d="M21 17v2a2 2 0 01-2 2h-2"/>
+        <path d="M7 21H5a2 2 0 01-2-2v-2"/>
+        <line x1="7" y1="12" x2="17" y2="12"/>
+      </svg>
+      Scan Barcode Instead
+    </button>
+
     <div class="field">
       <label for="storeSelect">Pharmacy Location</label>
       <div class="select-wrap">
@@ -375,6 +592,7 @@
     </button>
 
     <div class="message" id="errorMsg"></div>
+    <button type="button" class="back-link" id="backToChoiceBtn" style="display:none;">Back</button>
   </form>
 
   <!-- Success view -->
@@ -398,7 +616,13 @@
   <p class="copyright">&copy; 2026 Cosentino's Food Stores. All rights reserved.</p>
 </div>
 
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
+  // ---- Layout detection ----
+  const urlParams = new URLSearchParams(window.location.search);
+  const layout = urlParams.get('layout') || 'choice';  // 'choice' (A) or 'form' (B)
+
+  // ---- Element references (existing) ----
   const form = document.getElementById('refillForm');
   const storeSelect = document.getElementById('storeSelect');
   const rxInput = document.getElementById('rxNumber');
@@ -409,16 +633,72 @@
   const successText = document.getElementById('successText');
   const storePhone = document.getElementById('storePhone');
 
-  // Determine API base
+  // ---- Element references (new) ----
+  const choiceView = document.getElementById('choiceView');
+  const scannerView = document.getElementById('scannerView');
+  const scannedForm = document.getElementById('scannedForm');
+  const choiceScanBtn = document.getElementById('choiceScanBtn');
+  const choiceManualBtn = document.getElementById('choiceManualBtn');
+  const formScanBtn = document.getElementById('formScanBtn');
+  const cancelScanBtn = document.getElementById('cancelScanBtn');
+  const scanError = document.getElementById('scanError');
+  const scannedStoreInput = document.getElementById('scannedStore');
+  const scannedStoreIdInput = document.getElementById('scannedStoreId');
+  const scannedRxInput = document.getElementById('scannedRx');
+  const scannedNameInput = document.getElementById('scannedName');
+  const scannedSubmitBtn = document.getElementById('scannedSubmitBtn');
+  const scannedErrorMsg = document.getElementById('scannedErrorMsg');
+  const rescanBtn = document.getElementById('rescanBtn');
+  const backToChoiceBtn = document.getElementById('backToChoiceBtn');
+
+  // ---- State ----
+  let html5Qrcode = null;
+  let storesData = [];
+  let scanFallbackTimer = null;
+
   const API_BASE = window.location.origin;
 
-  // Load stores on page load
+  // ---- View switching ----
+  function getStartView() {
+    return layout === 'form' ? 'manual' : 'choice';
+  }
+
+  function showView(viewName) {
+    choiceView.style.display = 'none';
+    scannerView.style.display = 'none';
+    scannedForm.style.display = 'none';
+    form.style.display = 'none';
+    successView.style.display = 'none';
+
+    switch (viewName) {
+      case 'choice':  choiceView.style.display = 'block'; break;
+      case 'scanner': scannerView.style.display = 'block'; break;
+      case 'scanned': scannedForm.style.display = 'block'; break;
+      case 'manual':  form.style.display = 'block'; break;
+      case 'success': successView.style.display = 'block'; break;
+    }
+  }
+
+  // ---- Layout-specific setup ----
+  function initLayout() {
+    if (layout === 'form') {
+      // Layout B: show form with scan button at top
+      formScanBtn.style.display = 'flex';
+      showView('manual');
+    } else {
+      // Layout A: show choice view; "Back" link visible in manual form
+      backToChoiceBtn.style.display = 'block';
+      showView('choice');
+    }
+  }
+
+  // ---- Store loading ----
   async function loadStores() {
     try {
       const resp = await fetch(`${API_BASE}/api/stores`);
       const stores = await resp.json();
+      storesData = stores;
 
-      // Group by state for cleaner display
       const grouped = {};
       stores.forEach(s => {
         if (!grouped[s.state]) grouped[s.state] = [];
@@ -441,12 +721,134 @@
     }
   }
 
-  // Strip non-digits as user types, enforce 7-char max
+  function findStoreById(storeId) {
+    return storesData.find(s => s.id === storeId) || null;
+  }
+
+  // ---- Barcode parsing ----
+  function parseBarcode(rawText) {
+    const text = rawText.replace(/\s/g, '');
+
+    if (!/^\d{12}$/.test(text)) {
+      return { error: 'Invalid barcode format. Expected 12 digits.' };
+    }
+
+    const rxNumber = text.substring(0, 7);
+    const fillNumber = text.substring(7, 9);
+    const storeNumber = text.substring(9, 12);
+
+    if (!'2468'.includes(rxNumber[0])) {
+      return { error: 'Invalid prescription number in barcode.' };
+    }
+
+    return { rxNumber, fillNumber, storeNumber, error: null };
+  }
+
+  // ---- Scanner lifecycle ----
+  async function startScanner(useQrBox = true) {
+    showView('scanner');
+    clearScanError();
+    clearFallbackTimer();
+
+    if (!html5Qrcode) {
+      html5Qrcode = new Html5Qrcode('scannerRegion');
+    }
+
+    // Stop any existing scan before reconfiguring
+    if (html5Qrcode.isScanning) {
+      try { await html5Qrcode.stop(); } catch (e) { /* ignore */ }
+    }
+
+    const config = {
+      fps: 15,
+      formatsToSupport: [Html5QrcodeSupportedFormats.CODE_128],
+      experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+    };
+
+    // Start with a guide box; after 5s fall back to full-frame
+    if (useQrBox) {
+      config.qrbox = { width: 350, height: 150 };
+    }
+
+    try {
+      await html5Qrcode.start(
+        { facingMode: 'environment' },
+        config,
+        onScanSuccess,
+        () => {} // onScanFailure: fires every frame with no barcode, intentionally ignored
+      );
+
+      // If using the guide box, set a timer to switch to full-frame after 5s
+      if (useQrBox) {
+        scanFallbackTimer = setTimeout(() => {
+          startScanner(false);  // restart without the box
+        }, 5000);
+      }
+    } catch (err) {
+      handleCameraError(err);
+    }
+  }
+
+  function clearFallbackTimer() {
+    if (scanFallbackTimer) {
+      clearTimeout(scanFallbackTimer);
+      scanFallbackTimer = null;
+    }
+  }
+
+  async function stopScanner() {
+    clearFallbackTimer();
+    if (html5Qrcode && html5Qrcode.isScanning) {
+      try { await html5Qrcode.stop(); } catch (e) { /* ignore */ }
+    }
+  }
+
+  function onScanSuccess(decodedText) {
+    if (navigator.vibrate) navigator.vibrate(100);
+    stopScanner();
+
+    const parsed = parseBarcode(decodedText);
+    if (parsed.error) {
+      showScanError(parsed.error + ' Please try again or enter manually.');
+      setTimeout(() => { clearScanError(); startScanner(); }, 3000);
+      return;
+    }
+
+    const store = findStoreById(parsed.storeNumber);
+    if (!store) {
+      showScanError(`Store #${parsed.storeNumber} was not recognized. Please enter your refill manually.`);
+      setTimeout(() => { clearScanError(); showView(getStartView()); }, 3000);
+      return;
+    }
+
+    scannedStoreInput.value = store.label;
+    scannedStoreIdInput.value = store.id;
+    scannedRxInput.value = parsed.rxNumber;
+    scannedNameInput.value = '';
+
+    showView('scanned');
+  }
+
+  function handleCameraError(err) {
+    const msg = err.toString().toLowerCase();
+
+    if (msg.includes('permission') || msg.includes('notallowed')) {
+      showScanError('Camera access was denied. Please allow camera permission in your browser settings, or enter your refill manually.');
+    } else if (msg.includes('notfound') || msg.includes('no video')) {
+      showScanError('No camera found on this device. Please enter your refill manually.');
+    } else if (msg.includes('notreadable') || msg.includes('could not start')) {
+      showScanError('Camera is in use by another app. Please close it and try again.');
+    } else {
+      showScanError('Unable to start the camera. Please enter your refill manually.');
+    }
+  }
+
+  // ---- Rx input filter ----
   rxInput.addEventListener('input', () => {
     rxInput.value = rxInput.value.replace(/\D/g, '').slice(0, 7);
   });
 
-  // Form submission
+  // ---- Manual form submission (existing) ----
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     clearError();
@@ -455,7 +857,6 @@
     const store = storeSelect.value;
     const name = nameInput.value.trim();
 
-    // Client-side validation (mirrors server rules)
     if (!store) { showError('Please select your pharmacy location.'); return; }
     if (!rx || rx.length !== 7) {
       showError('Prescription number must be exactly 7 digits.');
@@ -466,17 +867,12 @@
       return;
     }
 
-    // Submit
     setLoading(true);
     try {
       const resp = await fetch(`${API_BASE}/api/refill`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          rx_number: rx,
-          store_id: store,
-          patient_name: name,
-        }),
+        body: JSON.stringify({ rx_number: rx, store_id: store, patient_name: name }),
       });
 
       const data = await resp.json();
@@ -493,18 +889,7 @@
         return;
       }
 
-      // Show success
-      successText.textContent = data.message;
-      if (data.store_phone) {
-        storePhone.textContent = data.store_phone;
-        storePhone.href = `tel:${data.store_phone.replace(/\D/g, '')}`;
-        storePhone.style.display = '';
-      } else {
-        storePhone.style.display = 'none';
-      }
-      form.style.display = 'none';
-      successView.style.display = 'block';
-
+      showSuccess(data);
     } catch (e) {
       showError('Unable to submit. Please check your connection and try again.');
     } finally {
@@ -512,6 +897,62 @@
     }
   });
 
+  // ---- Scanned form submission ----
+  scannedForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearScannedError();
+
+    const rx = scannedRxInput.value.trim();
+    const storeId = scannedStoreIdInput.value;
+    const name = scannedNameInput.value.trim();
+
+    if (!storeId) { showScannedError('Store not identified. Please scan again.'); return; }
+    if (!rx || rx.length !== 7) { showScannedError('Invalid Rx number. Please scan again.'); return; }
+
+    setScannedLoading(true);
+    try {
+      const resp = await fetch(`${API_BASE}/api/refill`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rx_number: rx, store_id: storeId, patient_name: name }),
+      });
+
+      const data = await resp.json();
+
+      if (!resp.ok) {
+        const detail = data.detail;
+        if (Array.isArray(detail)) {
+          showScannedError(detail.map(d => d.msg).join('. '));
+        } else if (typeof detail === 'string') {
+          showScannedError(detail);
+        } else {
+          showScannedError('Something went wrong. Please try again.');
+        }
+        return;
+      }
+
+      showSuccess(data);
+    } catch (e) {
+      showScannedError('Unable to submit. Please check your connection and try again.');
+    } finally {
+      setScannedLoading(false);
+    }
+  });
+
+  // ---- Shared success display ----
+  function showSuccess(data) {
+    successText.textContent = data.message;
+    if (data.store_phone) {
+      storePhone.textContent = data.store_phone;
+      storePhone.href = `tel:${data.store_phone.replace(/\D/g, '')}`;
+      storePhone.style.display = '';
+    } else {
+      storePhone.style.display = 'none';
+    }
+    showView('success');
+  }
+
+  // ---- UI helpers ----
   function showError(msg) {
     errorMsg.textContent = msg;
     errorMsg.className = 'message error';
@@ -526,13 +967,64 @@
       ? '<span class="spinner"></span>Submitting...'
       : 'Submit Refill Request';
   }
-  function resetForm() {
-    form.reset();
-    form.style.display = '';
-    successView.style.display = 'none';
-    clearError();
+
+  function showScanError(msg) {
+    scanError.textContent = msg;
+    scanError.className = 'message error';
+  }
+  function clearScanError() {
+    scanError.textContent = '';
+    scanError.className = 'message';
   }
 
+  function showScannedError(msg) {
+    scannedErrorMsg.textContent = msg;
+    scannedErrorMsg.className = 'message error';
+  }
+  function clearScannedError() {
+    scannedErrorMsg.textContent = '';
+    scannedErrorMsg.className = 'message';
+  }
+  function setScannedLoading(loading) {
+    scannedSubmitBtn.disabled = loading;
+    scannedSubmitBtn.innerHTML = loading
+      ? '<span class="spinner"></span>Submitting...'
+      : 'Submit Refill Request';
+  }
+
+  function resetForm() {
+    form.reset();
+    scannedForm.reset();
+    clearError();
+    clearScanError();
+    clearScannedError();
+    showView(getStartView());
+  }
+
+  // ---- Event listeners ----
+  choiceScanBtn.addEventListener('click', () => startScanner());
+  choiceManualBtn.addEventListener('click', () => showView('manual'));
+  formScanBtn.addEventListener('click', () => startScanner());
+
+  cancelScanBtn.addEventListener('click', async () => {
+    await stopScanner();
+    showView(getStartView());
+  });
+
+  rescanBtn.addEventListener('click', () => {
+    scannedForm.reset();
+    clearScannedError();
+    startScanner();
+  });
+
+  backToChoiceBtn.addEventListener('click', () => {
+    form.reset();
+    clearError();
+    showView('choice');
+  });
+
+  // ---- Init ----
+  initLayout();
   loadStores();
 </script>
 </body>
