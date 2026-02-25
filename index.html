@@ -322,7 +322,7 @@
     color: white;
   }
 
-  /* ---- Choice view (Layout A) ---- */
+  /* ---- Choice view ---- */
   .choice-view {
     text-align: center;
     padding: 8px 0;
@@ -367,33 +367,6 @@
   .choice-icon {
     width: 22px;
     height: 22px;
-    flex-shrink: 0;
-  }
-
-  /* ---- Scan header button (Layout B - inside existing form) ---- */
-  .scan-header-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-    padding: 14px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    font-family: inherit;
-    background: var(--success-bg);
-    color: var(--success);
-    border: 1.5px solid #b8d8c4;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.15s ease, transform 0.1s ease;
-    margin-bottom: 24px;
-  }
-  .scan-header-btn:active { transform: scale(0.985); }
-  .scan-header-btn:hover { background: #d9eedc; }
-  .scan-header-btn svg {
-    width: 20px;
-    height: 20px;
     flex-shrink: 0;
   }
 
@@ -512,6 +485,52 @@
     text-align: center;
   }
   .back-link:hover { color: var(--text); }
+
+  /* ---- Scan success overlay ---- */
+  .scan-success-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(46, 125, 50, 0.35);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .scan-success-overlay.visible { opacity: 1; }
+  .scan-success-overlay svg {
+    width: 80px;
+    height: 80px;
+    stroke: #fff;
+    stroke-width: 3;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+  }
+  .scan-success-overlay .check-path {
+    stroke-dasharray: 60;
+    stroke-dashoffset: 60;
+  }
+  .scan-success-overlay.visible .check-path {
+    animation: draw-check 0.35s ease-out 0.05s forwards;
+  }
+  @keyframes draw-check {
+    to { stroke-dashoffset: 0; }
+  }
+  .scanner-view.fade-out {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .scanned-form.fade-in {
+    animation: fadeSlideIn 0.3s ease forwards;
+  }
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 </style>
 </head>
 <body>
@@ -533,7 +552,7 @@
 </div>
 
 <div class="card">
-  <!-- Choice view (Layout A start) -->
+  <!-- Choice view -->
   <div id="choiceView" class="choice-view" style="display:none;">
     <p class="choice-subtitle">How would you like to submit your refill?</p>
     <button type="button" class="choice-btn choice-btn-primary" id="choiceScanBtn">
@@ -564,6 +583,11 @@
           <div class="guide-corner br"></div>
           <div class="scan-line"></div>
         </div>
+      </div>
+      <div class="scan-success-overlay" id="scanSuccessOverlay">
+        <svg viewBox="0 0 24 24">
+          <polyline class="check-path" points="20 6 9 17 4 12"></polyline>
+        </svg>
       </div>
     </div>
     <div class="message" id="scanError"></div>
@@ -600,23 +624,11 @@
     </button>
 
     <div class="message" id="scannedErrorMsg"></div>
-    <button type="button" class="back-link" id="rescanBtn">Scan a different barcode</button>
+    <button type="button" class="back-link" id="rescanBtn">Start Over</button>
   </form>
 
   <!-- Manual form view -->
   <form id="refillForm" style="display:none;">
-    <!-- Scan button for Layout B (hidden in Layout A) -->
-    <button type="button" class="scan-header-btn" id="formScanBtn" style="display:none;">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M3 7V5a2 2 0 012-2h2"/>
-        <path d="M17 3h2a2 2 0 012 2v2"/>
-        <path d="M21 17v2a2 2 0 01-2 2h-2"/>
-        <path d="M7 21H5a2 2 0 01-2-2v-2"/>
-        <line x1="7" y1="12" x2="17" y2="12"/>
-      </svg>
-      Scan Barcode Instead
-    </button>
-
     <div class="field">
       <label for="storeSelect">Pharmacy Location</label>
       <div class="select-wrap">
@@ -648,7 +660,7 @@
     </button>
 
     <div class="message" id="errorMsg"></div>
-    <button type="button" class="back-link" id="backToChoiceBtn" style="display:none;">Back</button>
+    <button type="button" class="back-link" id="backToChoiceBtn">Back</button>
   </form>
 
   <!-- Success view -->
@@ -674,10 +686,6 @@
 
 <script src="https://fastly.jsdelivr.net/npm/barcode-detector@3/dist/iife/polyfill.min.js"></script>
 <script>
-  // ---- Layout detection ----
-  const urlParams = new URLSearchParams(window.location.search);
-  const layout = urlParams.get('layout') || 'choice';  // 'choice' (A) or 'form' (B)
-
   // ---- Element references (existing) ----
   const form = document.getElementById('refillForm');
   const storeSelect = document.getElementById('storeSelect');
@@ -695,7 +703,6 @@
   const scannedForm = document.getElementById('scannedForm');
   const choiceScanBtn = document.getElementById('choiceScanBtn');
   const choiceManualBtn = document.getElementById('choiceManualBtn');
-  const formScanBtn = document.getElementById('formScanBtn');
   const cancelScanBtn = document.getElementById('cancelScanBtn');
   const scanError = document.getElementById('scanError');
   const scannedStoreInput = document.getElementById('scannedStore');
@@ -708,6 +715,7 @@
   const backToChoiceBtn = document.getElementById('backToChoiceBtn');
 
   const scannerVideo = document.getElementById('scannerVideo');
+  const scanSuccessOverlay = document.getElementById('scanSuccessOverlay');
 
   // ---- State ----
   let storesData = [];
@@ -720,10 +728,6 @@
   const API_BASE = window.location.origin;
 
   // ---- View switching ----
-  function getStartView() {
-    return layout === 'form' ? 'manual' : 'choice';
-  }
-
   function showView(viewName) {
     choiceView.style.display = 'none';
     scannerView.style.display = 'none';
@@ -740,17 +744,8 @@
     }
   }
 
-  // ---- Layout-specific setup ----
   function initLayout() {
-    if (layout === 'form') {
-      // Layout B: show form with scan button at top
-      formScanBtn.style.display = 'flex';
-      showView('manual');
-    } else {
-      // Layout A: show choice view; "Back" link visible in manual form
-      backToChoiceBtn.style.display = 'block';
-      showView('choice');
-    }
+    showView('choice');
   }
 
   // ---- Store loading ----
@@ -916,21 +911,43 @@
 
     // Valid barcode
     if (navigator.vibrate) navigator.vibrate(100);
-    stopScanner();
+
+    // Pause detection but keep camera stream alive (frozen last frame)
+    pauseScanning();
 
     const store = findStoreById(parsed.storeNumber);
     if (!store) {
+      stopScanner();
       showScanError(`Store #${parsed.storeNumber} was not recognized. Please enter your refill manually.`);
-      setTimeout(() => { clearScanError(); showView(getStartView()); }, 3000);
+      setTimeout(() => { clearScanError(); showView('choice'); }, 3000);
       return;
     }
 
+    // Populate form fields while overlay is showing
     scannedStoreInput.value = store.label;
     scannedStoreIdInput.value = store.id;
     scannedRxInput.value = parsed.rxNumber;
     scannedNameInput.value = '';
 
-    showView('scanned');
+    // Show checkmark overlay on frozen camera feed
+    scanSuccessOverlay.classList.add('visible');
+
+    // After dwell, fade out scanner view then swap to scanned form
+    setTimeout(() => {
+      scannerView.classList.add('fade-out');
+
+      setTimeout(() => {
+        stopScanner();
+        scanSuccessOverlay.classList.remove('visible');
+        scannerView.classList.remove('fade-out');
+
+        showView('scanned');
+        scannedForm.classList.add('fade-in');
+        scannedForm.addEventListener('animationend', () => {
+          scannedForm.classList.remove('fade-in');
+        }, { once: true });
+      }, 300);
+    }, 500);
   }
 
   function handleCameraError(err) {
@@ -1102,23 +1119,20 @@
     clearError();
     clearScanError();
     clearScannedError();
-    showView(getStartView());
+    showView('choice');
   }
 
   // ---- Event listeners ----
   choiceScanBtn.addEventListener('click', () => startScanner());
   choiceManualBtn.addEventListener('click', () => showView('manual'));
-  formScanBtn.addEventListener('click', () => startScanner());
 
   cancelScanBtn.addEventListener('click', async () => {
     await stopScanner();
-    showView(getStartView());
+    showView('choice');
   });
 
   rescanBtn.addEventListener('click', () => {
-    scannedForm.reset();
-    clearScannedError();
-    startScanner();
+    window.location.reload();
   });
 
   backToChoiceBtn.addEventListener('click', () => {
