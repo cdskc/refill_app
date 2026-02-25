@@ -408,13 +408,58 @@
     margin-bottom: 16px;
     line-height: 1.4;
   }
-  .scanner-region {
+  .scanner-container {
+    position: relative;
     width: 100%;
-    min-height: 280px;
     border-radius: 6px;
     overflow: hidden;
     margin-bottom: 16px;
     background: #000;
+  }
+  #scannerVideo {
+    display: block;
+    width: 100%;
+    min-height: 240px;
+    max-height: 50vh;
+    object-fit: cover;
+  }
+  .scanner-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .guide-box {
+    position: relative;
+    width: 80%;
+    height: 90px;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
+    border-radius: 4px;
+  }
+  .guide-corner {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-color: #fff;
+    border-style: solid;
+  }
+  .guide-corner.tl { top: -2px; left: -2px; border-width: 3px 0 0 3px; }
+  .guide-corner.tr { top: -2px; right: -2px; border-width: 3px 3px 0 0; }
+  .guide-corner.bl { bottom: -2px; left: -2px; border-width: 0 0 3px 3px; }
+  .guide-corner.br { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; }
+  .scan-line {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #ff4444, transparent);
+    animation: scanmove 2s ease-in-out infinite;
+  }
+  @keyframes scanmove {
+    0%, 100% { top: 15%; opacity: 0.6; }
+    50% { top: 85%; opacity: 1; }
   }
 
   /* ---- Scanned form ---- */
@@ -509,7 +554,18 @@
   <!-- Scanner view -->
   <div id="scannerView" class="scanner-view">
     <p class="scanner-instruction">Point your camera at the barcode on your prescription label</p>
-    <div id="scannerRegion" class="scanner-region"></div>
+    <div class="scanner-container">
+      <video id="scannerVideo" playsinline autoplay muted></video>
+      <div class="scanner-overlay">
+        <div class="guide-box">
+          <div class="guide-corner tl"></div>
+          <div class="guide-corner tr"></div>
+          <div class="guide-corner bl"></div>
+          <div class="guide-corner br"></div>
+          <div class="scan-line"></div>
+        </div>
+      </div>
+    </div>
     <div class="message" id="scanError"></div>
     <button type="button" class="choice-btn choice-btn-secondary" id="cancelScanBtn">Cancel</button>
   </div>
@@ -616,7 +672,6 @@
   <p class="copyright">&copy; 2026 Cosentino's Food Stores. All rights reserved.</p>
 </div>
 
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
   // ---- Layout detection ----
   const urlParams = new URLSearchParams(window.location.search);
@@ -651,10 +706,15 @@
   const rescanBtn = document.getElementById('rescanBtn');
   const backToChoiceBtn = document.getElementById('backToChoiceBtn');
 
+  const scannerVideo = document.getElementById('scannerVideo');
+
   // ---- State ----
-  let html5Qrcode = null;
   let storesData = [];
-  let scanFallbackTimer = null;
+  let barcodeDetector = null;
+  let scannerStream = null;
+  let scanning = false;
+  let scanAnimFrame = null;
+  let lastScanTime = 0;
 
   const API_BASE = window.location.origin;
 
@@ -745,74 +805,117 @@
   }
 
   // ---- Scanner lifecycle ----
-  async function startScanner(useQrBox = true) {
+  const SCAN_INTERVAL = 100; // ~10fps throttle
+
+  async function startScanner() {
     showView('scanner');
     clearScanError();
-    clearFallbackTimer();
 
-    if (!html5Qrcode) {
-      html5Qrcode = new Html5Qrcode('scannerRegion');
+    // Stop any existing scanner session
+    await stopScanner();
+
+    if (!('BarcodeDetector' in window)) {
+      showScanError('Barcode scanning is not supported on this browser. Please enter your prescription manually.');
+      return;
     }
-
-    // Stop any existing scan before reconfiguring
-    if (html5Qrcode.isScanning) {
-      try { await html5Qrcode.stop(); } catch (e) { /* ignore */ }
-    }
-
-    const config = {
-      fps: 15,
-      formatsToSupport: [Html5QrcodeSupportedFormats.CODE_128],
-      experimentalFeatures: { useBarCodeDetectorIfSupported: true },
-    };
-
-    // Start with a guide box; after 5s fall back to full-frame
-    if (useQrBox) {
-      config.qrbox = { width: 350, height: 150 };
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      showScanError('Camera access is not available. Please enter your prescription manually.');
+      return;
     }
 
     try {
-      await html5Qrcode.start(
-        { facingMode: 'environment' },
-        config,
-        onScanSuccess,
-        () => {} // onScanFailure: fires every frame with no barcode, intentionally ignored
-      );
-
-      // If using the guide box, set a timer to switch to full-frame after 5s
-      if (useQrBox) {
-        scanFallbackTimer = setTimeout(() => {
-          startScanner(false);  // restart without the box
-        }, 5000);
+      // Create detector on first use and verify code_128 support
+      if (!barcodeDetector) {
+        const formats = await BarcodeDetector.getSupportedFormats();
+        if (!formats.includes('code_128')) {
+          showScanError('Barcode scanning is not supported on this browser. Please enter your prescription manually.');
+          return;
+        }
+        barcodeDetector = new BarcodeDetector({ formats: ['code_128'] });
       }
+
+      scannerStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+        audio: false,
+      });
+
+      scannerVideo.srcObject = scannerStream;
+      await scannerVideo.play();
+
+      scanning = true;
+      lastScanTime = 0;
+      scanAnimFrame = requestAnimationFrame(scanLoop);
     } catch (err) {
       handleCameraError(err);
     }
   }
 
-  function clearFallbackTimer() {
-    if (scanFallbackTimer) {
-      clearTimeout(scanFallbackTimer);
-      scanFallbackTimer = null;
+  function scanLoop(timestamp) {
+    if (!scanning) return;
+
+    if (timestamp - lastScanTime < SCAN_INTERVAL) {
+      scanAnimFrame = requestAnimationFrame(scanLoop);
+      return;
     }
+    lastScanTime = timestamp;
+
+    if (scannerVideo.readyState < scannerVideo.HAVE_ENOUGH_DATA) {
+      scanAnimFrame = requestAnimationFrame(scanLoop);
+      return;
+    }
+
+    barcodeDetector.detect(scannerVideo).then(barcodes => {
+      if (!scanning) return;
+      if (barcodes.length > 0) {
+        onScanSuccess(barcodes[0].rawValue);
+      } else {
+        scanAnimFrame = requestAnimationFrame(scanLoop);
+      }
+    }).catch(() => {
+      if (scanning) scanAnimFrame = requestAnimationFrame(scanLoop);
+    });
+  }
+
+  function pauseScanning() {
+    scanning = false;
+    if (scanAnimFrame) { cancelAnimationFrame(scanAnimFrame); scanAnimFrame = null; }
+  }
+
+  function resumeScanning() {
+    if (!scannerStream) return;
+    scanning = true;
+    lastScanTime = 0;
+    scanAnimFrame = requestAnimationFrame(scanLoop);
   }
 
   async function stopScanner() {
-    clearFallbackTimer();
-    if (html5Qrcode && html5Qrcode.isScanning) {
-      try { await html5Qrcode.stop(); } catch (e) { /* ignore */ }
+    scanning = false;
+    if (scanAnimFrame) { cancelAnimationFrame(scanAnimFrame); scanAnimFrame = null; }
+    if (scannerStream) {
+      scannerStream.getTracks().forEach(t => t.stop());
+      scannerStream = null;
     }
+    scannerVideo.srcObject = null;
   }
 
   function onScanSuccess(decodedText) {
-    if (navigator.vibrate) navigator.vibrate(100);
-    stopScanner();
-
     const parsed = parseBarcode(decodedText);
+
     if (parsed.error) {
-      showScanError(parsed.error + ' Please try again or enter manually.');
-      setTimeout(() => { clearScanError(); startScanner(); }, 3000);
+      // Bad barcode format: pause scanning, show error, then resume
+      pauseScanning();
+      showScanError(parsed.error + ' Please try again.');
+      setTimeout(() => { clearScanError(); resumeScanning(); }, 2000);
       return;
     }
+
+    // Valid barcode
+    if (navigator.vibrate) navigator.vibrate(100);
+    stopScanner();
 
     const store = findStoreById(parsed.storeNumber);
     if (!store) {
