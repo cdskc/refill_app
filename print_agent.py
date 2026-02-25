@@ -113,7 +113,7 @@ def generate_zpl_label(rx_number: str, store_id: str,
 ^FO{_vy(224, 2)},20^GB2,620,2^FS
 ^FO{_vy(232, 22)},20^A0R,22,22^FDPlease pull and process.^FS
 
-^FO{_vy(262, 50)},20^BY2,2,50^BCR,50,Y,N,N^FD{rx_number}^FS
+^FO{_vy(262, 50)},20^BY2,2,50^BCR,50,Y,N,N^FD{rx_number}00{store_id}^FS
 
 ^XZ
 """.strip()
